@@ -12,7 +12,6 @@ FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 logging.basicConfig(format=FORMAT)
 PATH = "data/"
 
-
 def downlaod(names):
     filename, link = names
     response = requests.get(link, stream=True)
@@ -21,12 +20,11 @@ def downlaod(names):
             if chunk:
                 pdf.write(chunk)
 
-
 def pdfs_to_downlaod():
     link_filename = []
     try:
-        csv_filename = str(datetime.date.today()) + '.json'
-        data = pd.read_csv(csv_filename)
+        json_filename = str(datetime.date.today()) + '.json'
+        data = pd.read_csv(json_filename)
         pdf_links = data["pdf_link"]
         pdf_name = data["arxiv_id"]
         for filename, link in zip(pdf_name, pdf_links[1:2]):
@@ -35,7 +33,6 @@ def pdfs_to_downlaod():
     except Exception as e:
         print(e)
         print("Probably arxiv RSS is down!!!")
-
 
 def pdf_downlaod_main(pool):
     
@@ -47,9 +44,7 @@ def pdf_downlaod_main(pool):
         pool.join()
     except Exception as e:
         print(e)
-        
         pass
-
 
 def s3_to_local_machine(s3):
     BUCKET_NAME = 'researchkernel_datalake'  # replace with your bucket name
@@ -63,21 +58,16 @@ def s3_to_local_machine(s3):
             raise
 
 if __name__ == "__main__":
-
     s3 = boto3.resource('s3')
     pool = multiprocessing.Pool()
 
+    # downloading s3 to local machine 
     s3_to_local_machine(s3)
+
+    # make a folder named data.
     try:
         os.mkdir("data")
     except Exception as e:
         print(e)
-
+    # start downloading pdf into newly created folder 
     pdf_downlaod_main(pool)
-    
-
-    
-
-
-
-
