@@ -14,21 +14,26 @@ PATH = "data/"
 
 def downlaod(names):
     filename, link = names
-    response = requests.get(link, stream=True)
-    with open(PATH+filename+".pdf", "wb") as pdf:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                pdf.write(chunk)
+    try:
+        response = requests.get(link, stream=True)
+        with open(PATH+filename+".pdf", "wb") as pdf:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    pdf.write(chunk)
+    except Exception as e:
+        print(e)
+        pass
+
 
 def pdfs_to_downlaod():
     link_filename = []
     try:
         json_filename = str(datetime.date.today()) + '.json'
-        data = pd.read_csv(json_filename)
+        data = pd.read_json(json_filename)
         data = data.T
         pdf_links = data["pdf_link"]
         pdf_name = data["arxiv_id"]
-        for filename, link in zip(pdf_name, pdf_links[1:2]):
+        for filename, link in zip(pdf_name, pdf_links):
             link_filename.append((filename, link))
         return link_filename
     except Exception as e:
@@ -38,7 +43,6 @@ def pdfs_to_downlaod():
 def pdf_downlaod_main(pool):
     
     names = pdfs_to_downlaod()
-    names = names
     try:
         pool.map(downlaod, names)
         pool.close()
@@ -48,10 +52,11 @@ def pdf_downlaod_main(pool):
         pass
 
 def s3_to_local_machine(s3):
-    BUCKET_NAME = 'researchkernel_datalake'  # replace with your bucket name
-    KEY = 'rss/json/' + str(datetime.date.today()) + '.json'  # replace with your object key
+    BUCKET_NAME = 'researchkernel-datalake' 
+    KEY = 'rss/json/' + str(datetime.date.today()) + '.json'  
     try:
         s3.Bucket(BUCKET_NAME).download_file(KEY, str(datetime.date.today()) + '.json')
+        print("Downloaded file!!!")
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             print("The object does not exist.")
@@ -70,5 +75,6 @@ if __name__ == "__main__":
         os.mkdir("data")
     except Exception as e:
         print(e)
+        pass
     # start downloading pdf into newly created folder 
     pdf_downlaod_main(pool)
