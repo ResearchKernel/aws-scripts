@@ -70,7 +70,7 @@ def upload_data_s3():
     try:
         for root,dirs,files in os.walk("./data"):
             for file in files:
-                client.upload_file(os.path.join(root,file),BUCKET_NAME,"rss/pdf/"+file)
+                client.upload_file(os.path.join(root,file),BUCKET_NAME,"rss/pdf/"+str(datetime.date.today())+"/"+file)
     except Exception as e:
         print(e)
         pass
