@@ -25,6 +25,7 @@ def pdfs_to_downlaod():
     try:
         json_filename = str(datetime.date.today()) + '.json'
         data = pd.read_csv(json_filename)
+        data = data.T
         pdf_links = data["pdf_link"]
         pdf_name = data["arxiv_id"]
         for filename, link in zip(pdf_name, pdf_links[1:2]):
