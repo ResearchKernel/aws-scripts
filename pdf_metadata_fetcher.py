@@ -1,4 +1,4 @@
- import datetime
+import datetime
 import feedparser
 import pandas as pd
 import feedparser
@@ -8,7 +8,8 @@ import re
 import urllib.request
 import requests
 import boto3
-import ast
+import itertools
+
 s3 = boto3.client('s3')
 PDF_DIR = "./data/"
 
@@ -106,14 +107,9 @@ def pdf_main():
         feed = feedparser.parse(response)
         data.append(extract_metadata(feed))
     try:
+        data = list(itertools.chain.from_iterable(data))
         data = pd.DataFrame(data)
-        data.to_csv("./data/daily_update/"+str(datetime.date.today())+"_pdf.csv", index=False)
-        # Reading csv
-        data = pd.read_csv("./data/daily_update/"+str(datetime.date.today())+"_pdf.csv")
-        data["0"] = data["0"].apply(lambda x: ast.literal_eval(x))
-        data_list = data["0"].tolist()
-        data = pd.DataFrame(data_list)
-        data.T.to_json("./data/daily_update/"+str(datetime.date.today())+"_pdf.json")
+        data.T.to_json(str(datetime.date.today())+"_pdf.json")
     except Exception as e:
         print(e)
     try:
