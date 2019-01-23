@@ -10,13 +10,13 @@ import requests
 import boto3
 import ast
 s3 = boto3.client('s3')
-PDF_DIR = "./data/pdf/"
+PDF_DIR = "./data/"
 
 
 # list of filenames
 filenames_base_list = []
 
-for (dirpath, dirnames, filenames) in os.walk("data/pdf/pdf/"):
+for (dirpath, dirnames, filenames) in os.walk("./data/"):
         filenames_base_list += [os.path.join(dirpath, file) for file in filenames]
 arxiv_id_filenames_base = [os.path.basename(i) for i in filenames_base_list[1:]]
 arxiv_id = [os.path.splitext(i)[0] for i in arxiv_id_filenames_base]
@@ -24,9 +24,9 @@ start = time.time()
 
 
 # FILENMAES 
-csv_filename = 'data-engineering-service/arxivdailysync/'+str(datetime.date.today()) + '_pdf.csv'
-path = ".data/daily_update/"+str(datetime.date.today()) + '_pdf.csv'
-bucket_name = 'arxivoverload-developement'
+json_filename = 's3_pdf/pdf/'+str(datetime.date.today()) + '_pdf.json'
+path = "./data/"+str(datetime.date.today()) + '_pdf.json'
+bucket_name = 'researchkernel-datalake'
 def extract_metadata(feed):
     '''
                 Function: Extract all metadata from arxiv respose
@@ -94,7 +94,7 @@ def extract_metadata(feed):
         metadata_dict_list.append(metadata_dict)
     return metadata_dict_list
 
-def pdf_main(conn):
+def pdf_main():
 
     urls = [
         'http://export.arxiv.org/api/query?search_query={0}'.format(str(element)) for element in arxiv_id]
@@ -117,13 +117,7 @@ def pdf_main(conn):
     except Exception as e:
         print(e)
     try:
-        # s3.upload_file(path, bucket_name, csv_filename)
-        print("Save csv file to S3:data-engineering-service/arxivdailysync/")
-        conn.send["Process Finihsed!!!"]
+        s3.upload_file(path, bucket_name, json_filename)
     except Exception as e:
-        conn.send("There is some probllem, Priting stack below ")
-        conn.close()
         pass
-    finally:
-        conn.close()
 
