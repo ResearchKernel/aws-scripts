@@ -8,7 +8,6 @@ import re
 import itertools
 import pandas as pd
 
-
 # Function for parsing arxiv open API Feed. 
 
 def extract_metadata(feed):
@@ -101,7 +100,7 @@ def download(bucket_name, s3_text_filename, s3_json_filename, local_json_path, l
     # getting papers for each api sequentially 
     # No point to use multiprocessing    
     try:
-        for api in apis:
+        for api in apis[3:4]:
             response = requests.get("http://export.arxiv.org/rss/" + api)
             items = str(response.text).replace('\n', '')
             m = re.search('<rdf:Seq>(.+?)</rdf:Seq>', items)
