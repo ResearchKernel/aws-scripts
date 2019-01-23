@@ -63,6 +63,17 @@ def s3_to_local_machine(s3):
         else:
             raise
 
+def upload_data_s3():
+    client = boto3.client('s3')
+    BUCKET_NAME = 'researchkernel-datalake' 
+    KEY = 'rss/json/' + str(datetime.date.today()) + '.json'  
+    try:
+        for root,dirs,files in os.walk("./data"):
+            for file in files:
+                client.upload_file(os.path.join(root,file),BUCKET_NAME,"rss/pdf/"+file)
+    except Exception as e:
+        print(e)
+        pass
 if __name__ == "__main__":
     s3 = boto3.resource('s3')
     pool = multiprocessing.Pool()
@@ -78,3 +89,6 @@ if __name__ == "__main__":
         pass
     # start downloading pdf into newly created folder 
     pdf_downlaod_main(pool)
+
+    # Uploading PDF to S3
+    upload_data_s3()
