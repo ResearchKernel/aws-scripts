@@ -115,11 +115,18 @@ def get_tarfile_link(bucket_name):
         pass
     return TAR_FILENAME
 
-def upload_pdf(bucket_name):
-    s3 = boto3.client('s3')
-    os.system('zip -r '+str(datetime.date.today())+'.zip ./data/pdf/')
-    
 
+def upload_data_s3():
+    client = boto3.client('s3')
+    BUCKET_NAME = 'researchkernel-datalake' 
+    KEY = 's3_pdf/json/' + str(datetime.date.today()) + '.json'  
+    try:
+        for root,dirs,files in os.walk("./data"):
+            for file in files:
+                client.upload_file(os.path.join(root,file),BUCKET_NAME,"s3_pdf/pdf/"+str(datetime.date.today())+"/"+file)
+    except Exception as e:
+        print(e)
+        pass
 
 if __name__ == "__main__":
     s3 = boto3.client('s3')
