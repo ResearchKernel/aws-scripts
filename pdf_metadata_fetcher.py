@@ -10,24 +10,6 @@ import requests
 import boto3
 import itertools
 
-s3 = boto3.client('s3')
-PDF_DIR = "./data/"
-
-
-# list of filenames
-filenames_base_list = []
-
-for (dirpath, dirnames, filenames) in os.walk("./data/"):
-        filenames_base_list += [os.path.join(dirpath, file) for file in filenames]
-arxiv_id_filenames_base = [os.path.basename(i) for i in filenames_base_list[1:]]
-arxiv_id = [os.path.splitext(i)[0] for i in arxiv_id_filenames_base]
-start = time.time()
-
-
-# FILENMAES 
-json_filename = 's3_pdf/pdf/'+str(datetime.date.today()) + '_pdf.json'
-path = "./data/"+str(datetime.date.today()) + '_pdf.json'
-bucket_name = 'researchkernel-datalake'
 def extract_metadata(feed):
     '''
                 Function: Extract all metadata from arxiv respose
@@ -95,7 +77,7 @@ def extract_metadata(feed):
         metadata_dict_list.append(metadata_dict)
     return metadata_dict_list
 
-def pdf_main():
+def download_metadata_pdf(path, bucket_name, json_filename,arxiv_id):
 
     urls = [
         'http://export.arxiv.org/api/query?search_query={0}'.format(str(element)) for element in arxiv_id]
@@ -116,4 +98,61 @@ def pdf_main():
         s3.upload_file(path, bucket_name, json_filename)
     except Exception as e:
         pass
+
+
+
+def get_tarfile_link(bucket_name):
+    s3 = boto3.client('s3')
+    TAR_FILENAME = []
+    PREFIX = 's3_pdf/pdf/'
+    result = s3.list_objects(Bucket=bucket_name,
+                            Prefix=PREFIX,
+                            Delimiter='/')
+    try:
+        for i in range(1,5):
+            TAR_FILENAME.append(result["Contents"][i]["Key"])
+    except Exception as identifier:
+        pass
+    return TAR_FILENAME
+
+def upload_pdf(bucket_name):
+    s3 = boto3.client('s3')
+    os.system('zip -r '+str(datetime.date.today())+'.zip ./data/pdf/')
+    
+
+
+if __name__ == "__main__":
+    s3 = boto3.client('s3')
+    PDF_DIR = "./data/"
+    S3_filename = 's3_pdf/json/'+str(datetime.date.today()) + '_pdf.json'
+    json_path = "./data/"+str(datetime.date.today()) + '_pdf.json'
+    bucket_name = 'researchkernel-datalake'
+
+    # Download
+    try: 
+        os.mkdir("./data/")
+        for i in links:
+            s3.download_file(bucket_name, i, i)
+            os.system("tar xzf "+i+" -C data/")
+            s3.delete_object(Bucket=bucket_name, Key=i)
+    except Exception as e:
+        pass
+    
+    # list of filenames
+    filenames_base_list = []
+
+    for (dirpath, dirnames, filenames) in os.walk("./data/"):
+            filenames_base_list += [os.path.join(dirpath, file) for file in filenames]
+    arxiv_id_filenames_base = [os.path.basename(i) for i in filenames_base_list[1:]]
+    arxiv_id = [os.path.splitext(i)[0] for i in arxiv_id_filenames_base]
+    
+    # Links of TARFILE from S3
+    links = get_tarfile_link(bucket_name)
+
+    #Download metadata of PDF 
+    download_metadata_pdf(json_path, bucket_name, S3_filename,arxiv_id)
+
+    
+
+
 
