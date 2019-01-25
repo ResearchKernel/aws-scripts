@@ -45,8 +45,22 @@ def pdf_extract(dirs):
             json.dump(references_dict, fp)
         print("save json to reference:", file_json)
 
-def downlaod_s3():
-    pass
+def download_pdf(bucket_name):
+    s3 = boto3.client('s3')
+    PDF_FILENAME = []
+    PREFIX = 's3_pdf/pdf/2019-01-24/'
+    result = s3.list_objects(Bucket=bucket_name,
+                             Prefix=PREFIX,
+                             Delimiter='/')
+    try:
+        for i in range(1, 5):
+            PDF_FILENAME.append(result["Contents"][i]["Key"])
+    except Exception as identifier:
+        pass
+    for i in PDF_FILENAME:
+        s3.download()
+
+
 
 def uplaod_s3():
     pass
