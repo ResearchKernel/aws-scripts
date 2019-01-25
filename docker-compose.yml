@@ -1,0 +1,8 @@
+version: '2.1'
+
+services:
+  aws-scripts:
+    image: aws-scripts
+    build: .
+    ports:
+      - :
