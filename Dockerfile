@@ -15,7 +15,7 @@ ADD . /app
 
 # Using pip:
 RUN python3 -m pip install -r requirements.txt
-CMD ["python3", "-m", "aws-scripts"]
+CMD ["python3", "-m", "pdf_to_text.py"]
 
 # Using pipenv:
 #RUN python3 -m pip install pipenv
