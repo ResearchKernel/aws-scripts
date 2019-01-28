@@ -7,16 +7,18 @@ import multiprocessing
 from subprocess import call
 import pdfx
 import boto3
+import datetime
 
 # Gobal DIR 
-# "Change to according to your directory"
-
 txt_path = "./data/text/"
 ref_path = "./data/references/"
 pdf_path = "./data/pdf/"
 have = set(os.listdir(txt_path))
 
 def pdf_dir():
+    '''
+    This function returns a list of directories with filenames as a string. 
+    '''
     data = []
     for paths, dirs, file in os.walk(pdf_path):
         for f in file:
@@ -30,23 +32,19 @@ def pdf_extract(dirs):
     file_ = filename.replace(".pdf", ".txt")
     file_json = filename.replace(".pdf", ".json")
     if file_ in have:
-        print("file already extracted!!")
+        pass
     else:
-        print("read pdf file", filename)
         cmd_text_extractor = "pdfx %s -t -o %s" % (
             os.path.join(paths, filename), txt_path+file_)
         pdf = pdfx.PDFx(os.path.join(paths, filename))
         references_dict = pdf.get_references_as_dict()
-        print("extrated reference of:", file_)
         os.system(cmd_text_extractor)
-        print("extracted pdf_file:", file_)
         with open(ref_path+file_json, 'w') as fp:
             json.dump(references_dict, fp)
-        print("save json to reference:", file_json)
 
 def download_s3_pdf(bucket_name):
     '''
-    download pdf from s3_pdf 
+    This download S3 bulk pdfs to ./data/pdf folder
     '''
     s3 = boto3.client('s3')
     PDF_FILENAME = []
@@ -69,7 +67,7 @@ def download_s3_pdf(bucket_name):
 
 def download_rss_pdf(bucket_name):
     '''
-    Download pdf downloaded from rss
+    This function download pdf downloaded from rss tp ./data/pdf
     '''
     s3 = boto3.client('s3')
     PDF_FILENAME = []
@@ -90,28 +88,44 @@ def download_rss_pdf(bucket_name):
         print(e)
         pass 
 
-def uplaod_s3(bucket_name_ML):
-    
-    pass
+def zip_and_upload_to_s3(bucket_name_ML):
+    client = boto3.client('s3')
+    try:
+        # zip ./data/references/ and uplaod to S3
+        os.system("tar -zcvf references_"+str(datetime.date.today())+".tar.gz ./data/references/")
+        client.upload_file("references_"+str(datetime.date.today())+".tar.gz", bucket_name_ML, "references/"+str(datetime.date.today())+"/"+"references_"+str(datetime.date.today())+".tar.gz")
+        
+        # zip ./data/text/ and uplaod to S3
+        os.system("tar -zcvf text_"+str(datetime.date.today())+".tar.gz ./data/text/")
+        client.upload_file("text_"+str(datetime.date.today())+".tar.gz", bucket_name_ML, "text/"+str(datetime.date.today())+"/"+"text_"+str(datetime.date.today())+".tar.gz")
+    except Exception as e:
+        print(e) 
+        pass
 
 
 if __name__ == "__main__":
     # mkdir data dir
     bucket_name = 'researchkernel-datalake'
     bucket_name_ML = 'researchkernel-machinelearning'
+
+    # Downlaod the data from multipule origins from S3 into the data 
     try:
         download_s3_pdf(bucket_name)
         download_rss_pdf(bucket_name)
     except:
         pass
 
-    filenames = pdf_dir()
-    filenames = filenames
+    # Extracting references and text to the the respective folders
     try:
+        filenames = pdf_dir()
+        filenames = filenames
         pool = multiprocessing.Pool()
         pool.map(pdf_extract, filenames)
         pool.close()
         pool.join()
     except:
         pass
+    
+    # Uplaod zipped reference and text to the machine learning S3 bucket  
+    zip_and_upload_to_s3(bucket_name_ML)
     
