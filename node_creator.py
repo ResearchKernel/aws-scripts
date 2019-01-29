@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 from multiprocessing import Pool
 
 import gensim
@@ -19,7 +18,6 @@ def neo_node_creator(arxiv_id):
         cypher.commit() 
         print("commited again !!!")
         print("Done ",arxiv_id)
-        time.sleep(0.001)
 
 def main_node_builder(conn):
     pool = Pool(1)
