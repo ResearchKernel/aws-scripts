@@ -1,7 +1,7 @@
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-import osax
+import os
 import pandas as pd 
 import gensim 
 from py2neo import Graph, Node, Relationship
